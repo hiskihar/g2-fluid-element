@@ -1,0 +1,21 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
+.container {
+    width: 512px;
+    height: 512px;
+    /*border: 2px dashed oklch(86.677% 0.09443 341.624);*/
+}
