@@ -40,7 +40,7 @@ const buildCorner = (cx, cy, signX, signY, r, sW, sH, isVerticalStart) => {
     }
 };
 
-const getSVGPath = ({ w, h, tl = 0, tr = 0, br = 0, bl = 0 }) => {
+const getSVGPath = ({ x = 0, y = 0, w, h, tl = 0, tr = 0, br = 0, bl = 0 }) => {
 
     // Smart Edge-Based Radii Clamping (Priority-based)
     const clampEdge = (length, r1, r2) => {
@@ -80,10 +80,11 @@ const getSVGPath = ({ w, h, tl = 0, tr = 0, br = 0, bl = 0 }) => {
     const sRight = solveEdge(h, rTR, rBR);
 
     // Assemble Corners by passing Edge Smoothness (Width Edge, Height Edge)
-    const rt = buildCorner(w - rTR, rTR, 1, -1, rTR, sTop, sRight, false);
-    const rb = buildCorner(w - rBR, h - rBR, 1, 1, rBR, sBot, sRight, true);
-    const lb = buildCorner(rBL, h - rBL, -1, 1, rBL, sBot, sLeft, false);
-    const lt = buildCorner(rTL, rTL, -1, -1, rTL, sTop, sLeft, true);
+    // Offset the center points (cx, cy) by the x and y coordinates
+    const rt = buildCorner(x + w - rTR, y + rTR,     1, -1, rTR, sTop, sRight, false);
+    const rb = buildCorner(x + w - rBR, y + h - rBR, 1,  1, rBR, sBot, sRight, true);
+    const lb = buildCorner(x + rBL,     y + h - rBL,-1,  1, rBL, sBot, sLeft,  false);
+    const lt = buildCorner(x + rTL,     y + rTL,    -1, -1, rTL, sTop, sLeft,  true);
 
     const toC = (p) => `C ${p[0]} ${p[1]} ${p[2]} ${p[3]} ${p[4]} ${p[5]} C ${p[6]} ${p[7]} ${p[8]} ${p[9]} ${p[10]} ${p[11]}`;
 
@@ -101,9 +102,30 @@ const getSVGPath = ({ w, h, tl = 0, tr = 0, br = 0, bl = 0 }) => {
 };
 
 // Example
-const fluidPath1 = document.getElementById('fluid-path-1');
-const clipPath1 = document.getElementById('clip-path-1');
-const pathString1 = getSVGPath({ w: 400, h: 150, tl: 75, tr: 75, br: 75, bl: 75 });
-fluidPath1.setAttribute('d', pathString1);
-clipPath1.setAttribute('d', pathString1);
+const fluidPath = document.getElementById('fluid-path');
+const clipPath = document.getElementById('clip-path');
+const pathString1 = getSVGPath({ x: 200, y: 50, w: 200, h: 50, tl: 25, tr: 25, br: 25, bl: 25 });
+const pathString2 = getSVGPath({ x: 0, y: 0, w: 600, h: 400, tl: 100, tr: 100, br: 100, bl: 100 });
 
+fluidPath.setAttribute('d', pathString1);
+clipPath.setAttribute('d', pathString1);
+
+fluidPath.animate([
+    { d: `path("${pathString1}")` },
+    { d: `path("${pathString2}")` }
+], {
+    duration: 2000,
+    iterations: Infinity,
+    direction: 'alternate', // Changed to alternate for a smoother loop
+    easing: 'ease-in-out'    // Linear can feel a bit robotic for fluid shapes
+});
+
+clipPath.animate([
+    { d: `path("${pathString1}")` },
+    { d: `path("${pathString2}")` }
+], {
+    duration: 2000,
+    iterations: Infinity,
+    direction: 'alternate', // Changed to alternate for a smoother loop
+    easing: 'ease-in-out'    // Linear can feel a bit robotic for fluid shapes
+});
