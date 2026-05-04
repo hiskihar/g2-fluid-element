@@ -2,7 +2,7 @@ const { sqrt, min, max } = Math;
 const sq2 = sqrt(2);
 
 const unitCircularBezier = [0,    1, 1/16, 1, sq2 - 1, 1, sq2/2, sq2/2];
-const unitSmoothBezier   = [-3/8, 1, 0, 1, sq2 - 1, 1, sq2/2, sq2/2];
+const unitSmoothBezier   = [-3/8, 1, 0,    1, sq2 - 1, 1, sq2/2, sq2/2];
 
 const getUnitCurve = (smoothness) => 
     unitCircularBezier.map((val, i) => val + smoothness * (unitSmoothBezier[i] - val));
@@ -81,10 +81,10 @@ const getSVGPath = ({ x = 0, y = 0, w, h, tl = 0, tr = 0, br = 0, bl = 0 }) => {
 
     // Assemble Corners by passing Edge Smoothness (Width Edge, Height Edge)
     // Offset the center points (cx, cy) by the x and y coordinates
-    const rt = buildCorner(x + w - rTR, y + rTR,     1, -1, rTR, sTop, sRight, false);
-    const rb = buildCorner(x + w - rBR, y + h - rBR, 1,  1, rBR, sBot, sRight, true);
-    const lb = buildCorner(x + rBL,     y + h - rBL,-1,  1, rBL, sBot, sLeft,  false);
-    const lt = buildCorner(x + rTL,     y + rTL,    -1, -1, rTL, sTop, sLeft,  true);
+    const rt = buildCorner(x + w - rTR, y + rTR,      1, -1, rTR, sTop, sRight, false);
+    const rb = buildCorner(x + w - rBR, y + h - rBR,  1,  1, rBR, sBot, sRight, true);
+    const lb = buildCorner(x + rBL,     y + h - rBL, -1,  1, rBL, sBot, sLeft,  false);
+    const lt = buildCorner(x + rTL,     y + rTL,     -1, -1, rTL, sTop, sLeft,  true);
 
     const toC = (p) => `C ${p[0]} ${p[1]} ${p[2]} ${p[3]} ${p[4]} ${p[5]} C ${p[6]} ${p[7]} ${p[8]} ${p[9]} ${p[10]} ${p[11]}`;
 
@@ -103,29 +103,56 @@ const getSVGPath = ({ x = 0, y = 0, w, h, tl = 0, tr = 0, br = 0, bl = 0 }) => {
 
 // Example
 const fluidPath = document.getElementById('fluid-path');
-const clipPath = document.getElementById('clip-path');
-const pathString1 = getSVGPath({ x: 200, y: 50, w: 200, h: 50, tl: 25, tr: 25, br: 25, bl: 25 });
-const pathString2 = getSVGPath({ x: 0, y: 0, w: 600, h: 400, tl: 100, tr: 100, br: 100, bl: 100 });
+const clipPath  = document.getElementById('clip-path');
+const pathString1 = getSVGPath({ x: 200, y: 50, w: 200, h: 50,  tl: 25,  tr: 25,  br: 25,  bl: 25  });
+const pathString2 = getSVGPath({ x: 0,   y: 0,  w: 600, h: 400, tl: 100, tr: 100, br: 100, bl: 100 });
 
 fluidPath.setAttribute('d', pathString1);
-clipPath.setAttribute('d', pathString1);
+clipPath .setAttribute('d', pathString1);
 
-fluidPath.animate([
-    { d: `path("${pathString1}")` },
-    { d: `path("${pathString2}")` }
-], {
-    duration: 2000,
-    iterations: Infinity,
-    direction: 'alternate', // Changed to alternate for a smoother loop
-    easing: 'ease-in-out'    // Linear can feel a bit robotic for fluid shapes
+// Keep track of the active animations
+let activeFluidAnim = null;
+let activeClipAnim  = null;
+
+const timing = {
+    duration: 800,
+    fill: 'forwards',
+    easing: 'cubic-bezier(.3,.3,0,1)'
+};
+
+function animateToPath(targetPathString) {
+    // Capture the exact mid-animation path state
+    // getPropertyValue('d') returns a string like 'path("M...")' 
+    let currentD = getComputedStyle(fluidPath).getPropertyValue('d');
+    
+    // Fallback in case the browser hasn't computed a state yet
+    if (!currentD || currentD === 'none') {
+        currentD = `path("${fluidPath.getAttribute('d')}")`;
+    }
+
+    // Cancel the old animations immediately
+    if (activeFluidAnim) activeFluidAnim.cancel();
+    if (activeClipAnim)  activeClipAnim.cancel();
+
+    // Define keyframes from the current interpolated state to the new target
+    const keyframes = [
+        { d: currentD },
+        { d: `path("${targetPathString}")` }
+    ];
+
+    // Play the new animations forward
+    activeFluidAnim = fluidPath.animate(keyframes, timing);
+    activeClipAnim  = clipPath .animate(keyframes, timing);
+    
+    // Sync the underlying HTML attribute just to be safe when it finishes
+    activeFluidAnim.onfinish = () => fluidPath.setAttribute('d', targetPathString);
+    activeClipAnim .onfinish = () => clipPath.querySelector('path').setAttribute('d', targetPathString);
+}
+
+fluidPath.addEventListener('mouseenter', () => {
+    animateToPath(pathString2);
 });
 
-clipPath.animate([
-    { d: `path("${pathString1}")` },
-    { d: `path("${pathString2}")` }
-], {
-    duration: 2000,
-    iterations: Infinity,
-    direction: 'alternate', // Changed to alternate for a smoother loop
-    easing: 'ease-in-out'    // Linear can feel a bit robotic for fluid shapes
+fluidPath.addEventListener('mouseleave', () => {
+    animateToPath(pathString1);
 });
