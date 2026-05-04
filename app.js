@@ -1,4 +1,3 @@
-const fluidPath = document.getElementById('fluid-path');
 const { sqrt, min, max } = Math;
 const sq2 = sqrt(2);
 
@@ -102,5 +101,9 @@ const getSVGPath = ({ w, h, tl = 0, tr = 0, br = 0, bl = 0 }) => {
 };
 
 // Example
-const pathString = getSVGPath({ w: 500, h: 200, tl: 100, tr: 50, br: 1250, bl: 100 });
-fluidPath.setAttribute('d', pathString);
+const fluidPath1 = document.getElementById('fluid-path-1');
+const clipPath1 = document.getElementById('clip-path-1');
+const pathString1 = getSVGPath({ w: 400, h: 150, tl: 75, tr: 75, br: 75, bl: 75 });
+fluidPath1.setAttribute('d', pathString1);
+clipPath1.setAttribute('d', pathString1);
+
