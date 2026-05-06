@@ -29,13 +29,16 @@
                 primitiveUnits="objectBoundingBox"
                 preserveAspectRatio="none"
             />
-            <feGaussianBlur in="SourceGraphic" stdDeviation="0.006" result="blurredSource" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" result="blurredSource" />
             <feDisplacementMap
                 in="blurredSource"
                 in2="displacementMap"
-                scale=".2"
+                scale=".15"
                 xChannelSelector="R"
-                yChannelSelector="G" />
+                yChannelSelector="G"
+                result="displaced"
+            />
+            <feGaussianBlur in="displaced" stdDeviation="0.005" ></feGaussianBlur>
         </filter>
     </svg>
 </body>

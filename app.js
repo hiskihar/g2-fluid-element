@@ -182,7 +182,7 @@ const createGlassElement = ({
     const getGlassStyles = (state) => {
         const b = borderWidth;
         return {
-            width: `${Math.max(0, state.w - (b * 2))}px`,
+            width:  `${Math.max(0, state.w - (b * 2))}px`,
             height: `${Math.max(0, state.h - (b * 2))}px`,
             transform: `translate(${(state.x || 0) + b}px, ${(state.y || 0) + b}px)`,
             borderRadius: `${Math.max(0, (state.tl || 0) - b)}px ${Math.max(0, (state.tr || 0) - b)}px ${Math.max(0, (state.br || 0) - b)}px ${Math.max(0, (state.bl || 0) - b)}px`
@@ -219,17 +219,17 @@ const createGlassElement = ({
         // Top-left highlight
         const stop1 = document.createElementNS(ns, "stop");
         stop1.setAttribute("offset", "0%");
-        stop1.setAttribute("stop-color", "rgba(255, 255, 255, 0.5)");
+        stop1.setAttribute("stop-color", "rgba(255, 255, 255, 0.6)");
 
         // Center fade (transparent to let the background through)
         const stop2 = document.createElementNS(ns, "stop");
         stop2.setAttribute("offset", "40%");
-        stop2.setAttribute("stop-color", "rgba(255, 255, 255, 0.05)");
+        stop2.setAttribute("stop-color", "rgba(255, 255, 255, 0.2)");
 
         // Bottom-right ambient bounce light
         const stop3 = document.createElementNS(ns, "stop");
         stop3.setAttribute("offset", "100%");
-        stop3.setAttribute("stop-color", "rgba(255, 255, 255, 0.25)");
+        stop3.setAttribute("stop-color", "rgba(255, 255, 255, 0.4)");
 
         gradient.appendChild(stop1);
         gradient.appendChild(stop2);
@@ -318,19 +318,19 @@ const fluidElement = createFluidElement({
     options: {
         duration: 900,
         easing: 'cubic-bezier(.3,1,0,1)',
-        fill: '#222',
-        stroke: '#555',
+        fill: '#f7f7f7',
+        stroke: '#ffffff',
         strokeWidth: 1
     }
 });
 
 const glassElement = createGlassElement({
-    initState: { x: 100, y: 40, w: 200, h: 60,  tl: 30, tr: 30, br: 30, bl: 30 },
+    initState: { x: 100, y: 0, w: 200, h: 60,  tl: 30, tr: 30, br: 30, bl: 30 },
     altState:  { x: 0,   y: 0,  w: 400, h: 100, tl: 20, tr: 20, br: 20, bl: 20 },
     options: {
         duration: 900,
         easing: 'cubic-bezier(.3,1,0,1)',
-        fill: '#ffffff08',
+        fill: '#ffffff18',
         border: 'glass',
         filterUrl: 'url("#displacementFilter")',
     }

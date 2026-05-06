@@ -31,4 +31,6 @@ html, body {
     gap: 20px;
     align-items: center;
     justify-content: center;
+    background-image: url('background.jpg');
+    background-size: cover;
 }
