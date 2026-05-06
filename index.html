@@ -15,7 +15,10 @@
 
             <div class="toggle-switch">
                 <div class="track" id="track">
-                    <div class="draggable" id="draggable"></div>
+                    <div class="draggable" id="draggable">
+                        <div class="glass-handle handle"></div>
+                        <div class="solid-handle handle"></div>
+                    </div>
                 </div>
             </div>
 
@@ -27,6 +30,27 @@
         <filter id="displacementFilter" x="0" y="0" width="100%" height="100%" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB">
             <feImage 
                 href="squarish-dispmap.png" 
+                result="displacementMap" 
+                x="0" y="0" 
+                width="100%" height="100%" 
+                filterUnits="userSpaceOnUse"
+                primitiveUnits="objectBoundingBox"
+                preserveAspectRatio="none"
+            />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" result="blurredSource" />
+            <feDisplacementMap
+                in="blurredSource"
+                in2="displacementMap"
+                scale=".15"
+                xChannelSelector="R"
+                yChannelSelector="G"
+                result="displaced"
+            />
+            <feGaussianBlur in="displaced" stdDeviation="0.005" ></feGaussianBlur>
+        </filter>
+        <filter id="toggle-filter" x="0" y="0" width="100%" height="100%" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+            <feImage 
+                href="toggle-dispmap.png" 
                 result="displacementMap" 
                 x="0" y="0" 
                 width="100%" height="100%" 
