@@ -141,7 +141,178 @@ const createFluidElement = ({
     return svg;
 };
 
-const exampleElement = createFluidElement({
+
+
+const createGlassElement = ({ 
+    initState, 
+    altState, 
+    options = {} 
+}) => {
+    const { 
+        duration = 900, 
+        easing = 'cubic-bezier(.3,1,0,1)',
+        fill = '#aaaaaa1e',
+        border = '#bbbbbb60',
+        borderWidth = 1,
+        filterUrl,
+    } = options;
+
+    const path1 = getSVGPath(initState);
+    const path2 = getSVGPath(altState);
+
+    const maxW = Math.max((initState.x || 0) + initState.w, (altState.x || 0) + altState.w);
+    const maxH = Math.max((initState.y || 0) + initState.h, (altState.y || 0) + altState.h);
+
+    const container = document.createElement("div");
+    container.style.position = "relative";
+    container.style.width = `${maxW}px`;
+    container.style.height = `${maxH}px`;
+    container.style.cursor = "pointer";
+
+    const glassDiv = document.createElement("div");
+    glassDiv.style.position = "absolute";
+    glassDiv.style.top = "0";
+    glassDiv.style.left = "0";
+    glassDiv.style.backgroundColor = fill;
+    if (filterUrl) {
+        glassDiv.style.backdropFilter = filterUrl;
+        glassDiv.style.webkitBackdropFilter = filterUrl;
+    }
+
+    const getGlassStyles = (state) => {
+        const b = borderWidth;
+        return {
+            width: `${Math.max(0, state.w - (b * 2))}px`,
+            height: `${Math.max(0, state.h - (b * 2))}px`,
+            transform: `translate(${(state.x || 0) + b}px, ${(state.y || 0) + b}px)`,
+            borderRadius: `${Math.max(0, (state.tl || 0) - b)}px ${Math.max(0, (state.tr || 0) - b)}px ${Math.max(0, (state.br || 0) - b)}px ${Math.max(0, (state.bl || 0) - b)}px`
+        };
+    };
+
+    Object.assign(glassDiv.style, getGlassStyles(initState));
+
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.style.position = "absolute";
+    svg.style.top = "0";
+    svg.style.left = "0";
+    svg.style.pointerEvents = "none";
+    svg.setAttribute("width", maxW);
+    svg.setAttribute("height", maxH);
+    svg.setAttribute("viewBox", `0 0 ${maxW} ${maxH}`);
+
+    const defs = document.createElementNS(ns, "defs");
+    
+    let finalStroke = border;
+
+    if (border === 'glass') {
+        const gradId = `glass-grad-${Math.random().toString(36).substr(2, 9)}`;
+        const gradient = document.createElementNS(ns, "linearGradient");
+        gradient.setAttribute("id", gradId);
+        
+        // Diagonal light source (Top-Left to Bottom-Right)
+        gradient.setAttribute("x1", "10%");
+        gradient.setAttribute("y1", "0%");
+        gradient.setAttribute("x2", "90%");
+        gradient.setAttribute("y2", "100%");
+
+        // Top-left highlight
+        const stop1 = document.createElementNS(ns, "stop");
+        stop1.setAttribute("offset", "0%");
+        stop1.setAttribute("stop-color", "rgba(255, 255, 255, 0.5)");
+
+        // Center fade (transparent to let the background through)
+        const stop2 = document.createElementNS(ns, "stop");
+        stop2.setAttribute("offset", "40%");
+        stop2.setAttribute("stop-color", "rgba(255, 255, 255, 0.05)");
+
+        // Bottom-right ambient bounce light
+        const stop3 = document.createElementNS(ns, "stop");
+        stop3.setAttribute("offset", "100%");
+        stop3.setAttribute("stop-color", "rgba(255, 255, 255, 0.25)");
+
+        gradient.appendChild(stop1);
+        gradient.appendChild(stop2);
+        gradient.appendChild(stop3);
+        defs.appendChild(gradient);
+
+        finalStroke = `url(#${gradId})`;
+    }
+
+    // ---------------------------------------------------------
+    // Continue with standard Clip Path Setup
+    // ---------------------------------------------------------
+    const uid = `clip-${Math.random().toString(36).substr(2, 9)}`;
+    const clipPath = document.createElementNS(ns, "clipPath");
+    clipPath.setAttribute("id", uid);
+    
+    const clipPathEl = document.createElementNS(ns, "path");
+    clipPathEl.setAttribute("d", path1);
+    
+    clipPath.appendChild(clipPathEl);
+    defs.appendChild(clipPath);
+    svg.appendChild(defs);
+
+    // Apply the final calculated stroke
+    const borderPath = document.createElementNS(ns, "path");
+    borderPath.setAttribute("d", path1);
+    borderPath.setAttribute("fill", "none");
+    borderPath.setAttribute("stroke", finalStroke); // Uses the gradient OR the string
+    borderPath.setAttribute("stroke-width", borderWidth * 2);
+    borderPath.setAttribute("clip-path", `url(#${uid})`);
+
+    svg.appendChild(borderPath);
+    container.appendChild(glassDiv);
+    container.appendChild(svg);
+
+    let anims = [];
+    const timing = { duration, easing, fill: 'forwards' };
+
+    const animateToState = (targetPath, targetState) => {
+        let currentD = getComputedStyle(borderPath).getPropertyValue('d');
+        if (!currentD || currentD === 'none') {
+            currentD = `path("${borderPath.getAttribute('d')}")`;
+        }
+
+        const compStyles = getComputedStyle(glassDiv);
+        const currentGlassStyles = {
+            width: compStyles.width,
+            height: compStyles.height,
+            transform: compStyles.transform,
+            borderRadius: compStyles.borderRadius
+        };
+
+        const targetGlassStyles = getGlassStyles(targetState);
+
+        anims.forEach(a => a.cancel());
+        anims = [];
+
+        const pathKeyframes = [{ d: currentD }, { d: `path("${targetPath}")` }];
+        
+        const pAnim = borderPath.animate(pathKeyframes, timing);
+        const cAnim = clipPathEl.animate(pathKeyframes, timing); // Ensure the clip mask animates too
+        const gAnim = glassDiv.animate([currentGlassStyles, targetGlassStyles], timing);
+
+        anims.push(pAnim, cAnim, gAnim);
+
+        pAnim.onfinish = () => {
+            borderPath.setAttribute('d', targetPath);
+            clipPathEl.setAttribute('d', targetPath);
+            Object.assign(glassDiv.style, targetGlassStyles);
+        };
+    };
+
+    container.addEventListener('mouseenter', () => animateToState(path2, altState));
+    container.addEventListener('mouseleave', () => animateToState(path1, initState));
+
+    return container;
+};
+
+
+
+// Examples and testing:
+
+const fluidElement = createFluidElement({
     initState: { x: 100, y: 40, w: 200, h: 60,  tl: 30, tr: 30, br: 30, bl: 30 },
     altState:  { x: 0,   y: 0,  w: 400, h: 100, tl: 20, tr: 20, br: 20, bl: 20 },
     options: {
@@ -153,4 +324,17 @@ const exampleElement = createFluidElement({
     }
 });
 
-document.getElementsByClassName('container')[0].appendChild(exampleElement);
+const glassElement = createGlassElement({
+    initState: { x: 100, y: 40, w: 200, h: 60,  tl: 30, tr: 30, br: 30, bl: 30 },
+    altState:  { x: 0,   y: 0,  w: 400, h: 100, tl: 20, tr: 20, br: 20, bl: 20 },
+    options: {
+        duration: 900,
+        easing: 'cubic-bezier(.3,1,0,1)',
+        fill: '#ffffff08',
+        border: 'glass',
+        filterUrl: 'url("#displacementFilter")',
+    }
+});
+
+document.getElementsByClassName('container')[0].appendChild(fluidElement);
+document.getElementsByClassName('container')[0].appendChild(glassElement);
