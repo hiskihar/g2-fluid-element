@@ -21,7 +21,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
 
     </div>
@@ -68,6 +67,25 @@
                 result="displaced"
             />
             <feGaussianBlur in="displaced" stdDeviation="0.005" ></feGaussianBlur>
+        </filter>
+        <filter id="text-filter" x="0" y="0" width="100%" height="100%" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+            <feImage 
+                href="h1_dispmap.png" 
+                result="displacementMap" 
+                x="0" y="0" 
+                width="100%" height="100%" 
+                filterUnits="userSpaceOnUse"
+                primitiveUnits="objectBoundingBox"
+                preserveAspectRatio="none"
+            />
+            <feDisplacementMap
+                in="SourceGraphic"
+                in2="displacementMap"
+                scale=".15"
+                xChannelSelector="R"
+                yChannelSelector="G"
+                result="displaced"
+            />
         </filter>
     </svg>
 </body>

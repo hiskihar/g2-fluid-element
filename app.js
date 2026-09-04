@@ -239,9 +239,7 @@ const createGlassElement = ({
         finalStroke = `url(#${gradId})`;
     }
 
-    // ---------------------------------------------------------
-    // Continue with standard Clip Path Setup
-    // ---------------------------------------------------------
+
     const uid = `clip-${Math.random().toString(36).substr(2, 9)}`;
     const clipPath = document.createElementNS(ns, "clipPath");
     clipPath.setAttribute("id", uid);
@@ -253,11 +251,10 @@ const createGlassElement = ({
     defs.appendChild(clipPath);
     svg.appendChild(defs);
 
-    // Apply the final calculated stroke
     const borderPath = document.createElementNS(ns, "path");
     borderPath.setAttribute("d", path1);
     borderPath.setAttribute("fill", "none");
-    borderPath.setAttribute("stroke", finalStroke); // Uses the gradient OR the string
+    borderPath.setAttribute("stroke", finalStroke);
     borderPath.setAttribute("stroke-width", borderWidth * 2);
     borderPath.setAttribute("clip-path", `url(#${uid})`);
 
@@ -290,7 +287,7 @@ const createGlassElement = ({
         const pathKeyframes = [{ d: currentD }, { d: `path("${targetPath}")` }];
         
         const pAnim = borderPath.animate(pathKeyframes, timing);
-        const cAnim = clipPathEl.animate(pathKeyframes, timing); // Ensure the clip mask animates too
+        const cAnim = clipPathEl.animate(pathKeyframes, timing);
         const gAnim = glassDiv.animate([currentGlassStyles, targetGlassStyles], timing);
 
         anims.push(pAnim, cAnim, gAnim);
@@ -310,7 +307,6 @@ const createGlassElement = ({
 
 
 
-// Examples and testing:
 
 const fluidElement = createFluidElement({
     initState: { x: 100, y: 40, w: 200, h: 60,  tl: 30, tr: 30, br: 30, bl: 30 },

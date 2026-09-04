@@ -17,19 +17,15 @@ function updateBounds() {
 function setSide(side) {
     const targetLeft = side === 'right' ? maxLeft : 0;
     const currentPos = parseInt(draggable.style.left, 10) || 0;
-    
-    // Update state variables
+
     isToggled = (side === 'right');
     toggleSwitch.classList.toggle('toggled', isToggled);
 
-    // Failsafe: If the slider is already at the target position, there won't be a 
-    // transition. Remove the glass effect immediately to prevent it getting stuck.
     if (currentPos === targetLeft) {
         draggable.classList.remove('grabbed');
         return;
     }
 
-    // Apply animation class and the glass effect class
     draggable.classList.add('animate-movement', 'grabbed');
     draggable.style.left = `${targetLeft}px`;
 }
@@ -38,32 +34,25 @@ function toggle() {
     setSide(isToggled ? 'left' : 'right');
 }
 
-// --- NEW: Clean up the glass effect after the slide animation finishes ---
 draggable.addEventListener('transitionend', (e) => {
-    // We only care about the 'left' property finishing.
-    // Also, don't remove it if the user is currently holding the thumb down!
+
     if (e.propertyName === 'left' && !isPointerDown) {
         draggable.classList.remove('grabbed');
     }
 });
 
-// Initialize
 updateBounds();
 setSide('left'); 
-draggable.classList.remove('grabbed'); // Clear any initial animation artifacts
+draggable.classList.remove('grabbed');
 window.addEventListener('resize', updateBounds);
 
-/**
- * DRAG LOGIC (Thumb only)
- */
 draggable.addEventListener('pointerdown', (e) => {
     e.stopPropagation(); 
     isPointerDown = true;
     hasDragged = false;
     startX = e.clientX;
     initialLeft = parseInt(window.getComputedStyle(draggable).left, 10) || 0;
-    
-    // Instantly show glass effect and remove transition for 1:1 dragging
+
     draggable.classList.add('grabbed');
     draggable.classList.remove('animate-movement');
     
@@ -103,14 +92,7 @@ draggable.addEventListener('pointercancel', (e) => {
     setSide((currentPos / maxLeft) >= 0.5 ? 'right' : 'left');
 });
 
-/**
- * CLICK LOGIC (Wrapper)
- */
 toggleSwitch.addEventListener('click', (e) => {
-    // --- NEW ARCHITECTURE: closest() check ---
-    // Because the handles are now nested inside .draggable, clicking them sets e.target 
-    // to the handle, not the draggable. closest() checks up the DOM tree to prevent 
-    // the wrapper click from firing when interacting with the thumb.
     if (e.target.closest('#draggable')) return;
     
     toggle();
